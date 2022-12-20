@@ -1,16 +1,16 @@
-{
+params = {
     "version": "hg19",
     "data": {
-        "reference": "data/GRCh37_latest_genomic.fna",
-        "annotation": "data/hg19-p13_annotation_bak.db",
-        "coordinates": "data/cdot-0.2.1.refseq.grch37_grch38.json.gz",
-        "sequences": "data/seqrepo/2021-01-29",
+        "reference": "/mnt/data/GRCh37_latest_genomic.fna",
+        "annotation": "/mnt/data/hg19-p13_annotation.db",
+        "coordinates": "/mnt/data/cdot-0.2.1.refseq.grch37_grch38.json.gz",
+        "sequences": "/mnt/data/seqrepo/2021-01-29",
         "variation": {
-            "dbSNP": "data/GRCh37_latest_dbSNP_all.vcf.gz",
-            "1000Genomes": "data/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz",
-            "ESP": "data/ESP6500SI-V2-SSA137.GRCh38-liftover.snps_indels.vcf.gz"
+            "dbSNP": "/mnt/data/GRCh37_latest_dbSNP_all.vcf.gz",
+            "1000Genomes": "/mnt/data/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz",
+            "ESP": "/mnt/data/ESP6500SI-V2-SSA137.GRCh38-liftover.snps_indels.vcf.gz"
         },
-        "chrom_names": "data/chrom_names_hg19.csv"
+        "chrom_names": "/mnt/data/chrom_names_hg19.csv"
     },
     "snv_filter": {
         "min_databases": 2,

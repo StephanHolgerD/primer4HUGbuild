@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 import pdb
 import os
-
+from settings import credentials
 import click
 from cdot.hgvs.dataproviders import JSONDataProvider
 import gffutils
@@ -282,17 +282,17 @@ def housekeeping(params):
 # ------------------------------------------------------------------------------
 
 
-parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('--config', required=True, type=str)
-args = parser.parse_args()
+#parser = argparse.ArgumentParser(description='Process some integers.')
+#parser.add_argument('--config', required=True, type=str)
+#args = parser.parse_args()
 
 
-def main(fp_config):
-    st.set_page_config(layout='centered')
+def main():
+    st.set_page_config(layout='centered', page_title = 'Primer4You', page_icon = "🙈")
 
-    with open(fp_config, 'r') as file:
-        params = json.load(file)
-    
+    #with open(fp_config, 'r') as file:
+    #    params = json.load(file)
+    params = credentials.params
     chrom_names = load_chromosome_names(params['data']['chrom_names'])
     _ = params.update({'cn': chrom_names})  # inplace, this feels dirty
 
@@ -500,5 +500,5 @@ def main(fp_config):
 
 
 if __name__ == '__main__':
-    main(args.config)
+    main()
 
