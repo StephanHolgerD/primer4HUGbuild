@@ -16,8 +16,8 @@ import streamlit as st
 from primer4.models import Variant
 from primer4.utils import convert_chrom
 from primer4.design import project_mask_onto_primers
-
-
+tmpD = '/tmp'
+pyGenomeTracksBin = '/usr/local/bin/stream_env/bin/pyGenomeTracks'
 def prepare_mock_data_for_vis():
     # Data for plotting
     # https://docs.streamlit.io/library/api-reference/charts/st.pyplot
@@ -98,7 +98,7 @@ def prepare_data_for_vis(v, tmp, primers):
 
     # --- Primers and query variant ---
 
-    tmp_dir = TemporaryDirectory()
+    tmp_dir = TemporaryDirectory(dir=tmpD)
     tmp_fp = Path(tmp_dir.name)
 
     if type(v) == Variant:
@@ -252,7 +252,7 @@ def prepare_data_for_vis(v, tmp, primers):
     img_fp = str(tmp_fp / 'img.png')
 
     subprocess.run([
-        'pyGenomeTracks',
+        pyGenomeTracksBin,
         '--tracks', str(tmp_fp / 'tracks.filled.ini'),
         '--region', f'{tmp.feat.chrom}:{np.min(positions)-100}-{np.max(positions)+100}',
         '--outFileName', img_fp,
