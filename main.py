@@ -2,9 +2,9 @@
 streamlit run primer4/stream.py -- --config config.json
 pytest --config config.json
 '''
-
-
 import argparse
+from datetime import date
+
 # from collections import Counter
 import json
 from pathlib import Path
@@ -18,7 +18,10 @@ import hgvs
 import pandas as pd
 from pyfaidx import Fasta
 import streamlit as st
-
+from st_aggrid import AgGrid, JsCode, GridOptionsBuilder,ColumnsAutoSizeMode
+import xlsxwriter
+from io import BytesIO
+from primer4.df_inSilPcr import InserInSilPCRlink
 from primer4.models import Variant, ExonDelta, SingleExon, ExonSpread, Template
 from primer4.design import (
     design_primers,
@@ -36,7 +39,6 @@ from primer4.utils import (
 from primer4.vis import prepare_data_for_vis, primers_to_df
 # from primer4.vis import Beauty, prepare_mock_data_for_vis
 from primer4.warnings import warn
-
 
 def gimme_some_primers(method, code, fp_genome, genome, hdp, db, vardbs, params, max_variation, blind_search):
     '''
@@ -238,7 +240,7 @@ def gimme_some_primers(method, code, fp_genome, genome, hdp, db, vardbs, params,
     # Results are sorted so we can just return the top mx elements.
     return all_results[:mx], tmp, all_aln[:mx]
 
-
+@st.cache
 def load_chromosome_names(fn):
     # https://stackoverflow.com/questions/1270951/how-to-refer-to-relative-paths-of-resources-when-working-with-a-code-repository
     # fn = Path(__file__).parents[1] / 'chrom_names_hg38.csv'
@@ -288,7 +290,17 @@ def housekeeping(params):
 
 
 def main():
-    st.set_page_config(layout='centered', page_title = 'Primer4You', page_icon = "🙈")
+    if 'primers' not in st.session_state:
+        st.session_state['primers'] = ''
+    if 'tmp' not in st.session_state:
+        st.session_state['tmp'] = ''
+    if 'params' not in st.session_state:
+        st.session_state['params'] = ''
+    if 'order' not in st.session_state:
+        st.session_state['order'] = ''
+    if 'image' not in st.session_state:
+        st.session_state['image'] = ''
+    st.set_page_config(layout='wide', page_title = 'Primer4You', page_icon = "🙈")
 
     #with open(fp_config, 'r') as file:
     #    params = json.load(file)
@@ -320,9 +332,8 @@ def main():
     db = gffutils.FeatureDB(params['data']['annotation'], keep_order=True)
 
 
-    st.markdown(
-        r'''
-        ## ❤️ Primer4U ❤️
+    wlcmStr = f'''
+        ## ❤️ Primer4U  {params['version']} ❤️
 
         Example queries:
 
@@ -336,6 +347,9 @@ def main():
         NM_000546.6::5::7
         ```
         '''
+
+    st.markdown(
+        wlcmStr
         )
 
     # The menu
@@ -379,7 +393,8 @@ def main():
             on_click=warn(method, params, amplicon_len_min, amplicon_len_max))
             # warn() will replace params inplace (eg amplicon len)
 
-        if submitted:
+        if submitted or st.session_state['primers']=='':
+            st.session_state['primers']=''
             if not order:
                 st.write('Please provide a query')
                 return None
@@ -396,6 +411,7 @@ def main():
                     code = [code[0].replace(tx, used_tx)] + code[1:]
 
                 print(log('Primer design'))
+
                 with st.spinner(text='Design in progress ...'):
                     primers, tmp, aln = gimme_some_primers(
                         method,
@@ -408,9 +424,20 @@ def main():
                         params,
                         max_variation,
                         blind_search)
+                st.session_state['primers']=primers
+                st.session_state['tmp']=tmp
+                #st.session_state['params']=params
+                #st.session_state['order']=order
+                st.session_state['image'] = prepare_data_for_vis(tmp.data, tmp, primers)
 
-        else:
-            return None
+        
+    primers = st.session_state['primers']
+    tmp = st.session_state['tmp']
+    #params = st.session_state['params']
+    #order = st.session_state['order']
+    image = st.session_state['image']
+
+            #return None
     # What's in "primers"?
     #import pdb
     #pdb.set_trace()
@@ -423,12 +450,12 @@ def main():
     # TODO: coding coords
 
     # TODO def prepare_df() in vis
-    
-    df = primers_to_df(primers, tmp, order, params)
-    if df.empty:
-        st.write('No primers found under the provided constrains. Relax (the constraints)!')
-
-    else:
+    #primers = st.session_state['primers']
+    if primers != '':
+        df = primers_to_df(primers, tmp, order, params)
+        if df.empty:
+            st.write('No primers found under the provided constrains. Relax (the constraints)!')
+        else:
         # Plot something
         # data = prepare_mock_data_for_vis()
         #_ = Beauty(data).plot()
@@ -436,11 +463,30 @@ def main():
         # "image" is generated like so:
         # from PIL import Image
         # image = Image.open(fp)
-        with st.spinner(text='Preparing results ...'):
-            image = prepare_data_for_vis(tmp.data, tmp, primers)
+
+            df = InserInSilPCRlink(df,MaxL=amplicon_len_max)
+            gb = GridOptionsBuilder.from_dataframe(df,min_column_width=100)
+            gb.configure_column("UCSC PCR",
+                    headerName="UCSC PCR",
+                    cellRenderer=JsCode("""function(params) {return `<a href=${params.value} target="_blank">UCSC pcr</a>`}"""))
+
+            gb.configure_column("gnomAD region",
+                    headerName="gnomAD region",
+                    cellRenderer=JsCode("""function(params) {return `<a href=${params.value} target="_blank">gnomAD region</a>`}"""))
+
+            gb.configure_column("forward primer gnomad",
+                    headerName="forward primer gnomad",
+                    cellRenderer=JsCode("""function(params) {return `<a href=${params.value} target="_blank">gnomAD fwd</a>`}"""))
+
+            gb.configure_column("reverse primer gnomad",
+                    headerName="reverse primer gnomad",
+                    cellRenderer=JsCode("""function(params) {return `<a href=${params.value} target="_blank">gnomAD rev</a>`}"""))
+   
+            gridOptions = gb.build()
+
     
             # Center image
-            col1, col2, col3 = st.columns([1, 1000, 1])
+            col1, col2, col3 = st.columns([ 1, 2, 1])
             st.text('\n')
             with col1:
                 st.write('')
@@ -457,15 +503,19 @@ def main():
             # https://docs.streamlit.io/library/api-reference/data/st.dataframe
             # st.table(df)
             st.text('\n')
-            st.dataframe(
-                df.style.format(
-                    {
-                        'penalty': '{:.2f}',
-                        'fwd GC': '{:.2f}',
-                        'rev GC': '{:.2f}',
-                        'fwd Tm': '{:.2f}',
-                        'rev Tm': '{:.2f}',
-                    }))
+            AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True,fit_columns_on_grid_load=True)
+
+            #dff = df.to_html(escape=False)
+            #st.write(dff, unsafe_allow_html=True)
+            #st.dataframe(
+            #    df.style.format(
+            #        {
+            #            'penalty': '{:.2f}',
+            #            'fwd GC': '{:.2f}',
+            #            'rev GC': '{:.2f}',
+            #            'fwd Tm': '{:.2f}',
+            #            'rev Tm': '{:.2f}',
+            #        }))
         
         # TODO: Style columns?
         # https://stackoverflow.com/questions/41654949/pandas-style-function-to-highlight-specific-columns
@@ -474,13 +524,34 @@ def main():
         # Download
         # https://docs.streamlit.io/knowledge-base/using-streamlit/how-download-pandas-dataframe-csv
         # https://docs.streamlit.io/knowledge-base/using-streamlit/how-download-file-streamlit
-        @st.cache
-        def convert_df(df):
-            return df.to_csv(index=False, quoting=None).encode('utf-8')
-
+            def convert_df(df):
+                output = BytesIO()
+                writer = pd.ExcelWriter(output, engine='xlsxwriter')
+                df.to_excel(writer, index=False, sheet_name='Sheet1')
+                return df.to_csv(index=False, quoting=None).encode('utf-8')
+            @st.cache
+            def to_excel(df):            
+                output = BytesIO()
+                writer = pd.ExcelWriter(output)
+                df.to_excel(writer, index=False,sheet_name='Sheet1')
+            #writer.save()
+            #workbook = writer.book
+            #worksheet = writer.sheets['Sheet1']
+                writer.save()
+            
+            #workbook = writer.book
+            #worksheet = writer.sheets['Sheet1']
+            #format1 = workbook.add_format({'num_format': '0.00'}) 
+            #worksheet.set_column('A:A', None, format1)  
+            #writer.save()
+                processed_data = output.getvalue()
+                return processed_data
         #import pdb
         #pdb.set_trace()
-        csv = convert_df(df)
+        #csv = convert_df(df)
+            excel = to_excel(df)
+            today = date.today()
+            d = today.strftime("%b_%d_%Y")
 
         # This reloads the entire page, see "hacks.py"
         # st.download_button(
@@ -493,8 +564,12 @@ def main():
 
         #import pandas as pd
         
-        download_button_str = download_button(csv, 'primers.csv', f'Download')
-        st.markdown(download_button_str, unsafe_allow_html=True)
+        #download_button_str = download_button(data = excel, filename = 'primers.xlsx', label = f'Download')
+        #st.markdown(download_button_str, unsafe_allow_html=True)
+
+            st.download_button(label='📥 Download Primers',
+                                data=excel ,
+                                file_name= f'primer_{d}.xlsx')
 
     return None
 
