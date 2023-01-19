@@ -14,7 +14,7 @@ import pandas as pd
 import streamlit as st
 
 from primer4.models import Variant
-from primer4.utils import convert_chrom
+from primer4.utils import convert_chrom, log
 from primer4.design import project_mask_onto_primers
 tmpD = '/tmp'
 pyGenomeTracksBin = '/usr/local/bin/stream_env/bin/pyGenomeTracks'
@@ -272,8 +272,7 @@ def prepare_data_for_vis(v, tmp, primers):
 
 
 def primers_to_df(primers, tmp, qry, params):
-    pd.set_option("display.precision", 2)
-
+    #pd.set_option("display.precision", 2)
     l = []
     for pair in primers:
         _, fwd_start, fwd_end = pair.get_genomic_coords(tmp, 'fwd')
@@ -313,8 +312,8 @@ def primers_to_df(primers, tmp, qry, params):
             #aln[(pair.name, 'fwd', tmp.feat.chrom, fwd_start, fwd_end)],
             #aln[(pair.name, 'rev', tmp.feat.chrom, rev_start, rev_end)],
         ]
-        l.append(row)
 
+        l.append(row)
     # Any primers found?
     if not l:
         return pd.DataFrame()
