@@ -169,3 +169,4 @@ widgetsnbextension==4.0.3
 yoyo-migrations==7.3.2
 zict==2.2.0
 zipp==3.8.1
+XlsxWriter==3.0.3
