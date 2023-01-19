@@ -428,7 +428,8 @@ def main():
                 st.session_state['tmp']=tmp
                 #st.session_state['params']=params
                 #st.session_state['order']=order
-                st.session_state['image'] = prepare_data_for_vis(tmp.data, tmp, primers)
+                if len(primers) > 0:
+                    st.session_state['image'] = prepare_data_for_vis(tmp.data, tmp, primers)
 
         
     primers = st.session_state['primers']
