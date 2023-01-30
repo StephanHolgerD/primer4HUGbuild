@@ -46,12 +46,20 @@ def InserInSilPCRlink(df,MaxL=600,genome='hg38'):
     df['gnomAD region'] = linksGnomadRegion
     df['forward primer gnomad'] = linksGnomadfwd
     df['reverse primer gnomad'] = linksGnomadrev
-
+    df['Nr. Abb'] = list(range(len(df)))
     fp = [n for n,x in enumerate(columns) if x =='fwd start'][0]
     rp = [n for n,x in enumerate(columns) if x =='rev start'][0]
 
-
-    newC = ['gnomAD region'] + ['UCSC PCR']+columns[:fp]+['forward primer gnomad'] + columns[fp:rp] + ['reverse primer gnomad'] + columns[rp:]
+    newC = ['Nr. Abb', 'chrom', 'transcript','gene', 'penalty', 'amplicon',  
+    'fwd c. start', ' fwd c. end' ,'fwd 5>3' , 'fwd Tm', 'forward primer gnomad' ,
+    ' rev c. start', ' rev c. end', 'rev 5>3', 'rev Tm',  'reverse primer gnomad',
+    'UCSC PCR','gnomAD region', 
+    'fwd len','fwd GC', 'fwd start','fwd end',
+    'rev len','rev GC', 'rev start','rev end',
+    'aln fwd 5>3', 'aln rev 5>3',
+    'name','query']
+    #newC = ['gnomAD region'] + ['UCSC PCR']+columns[:fp]+['forward primer gnomad'] + columns[fp:rp] + ['reverse primer gnomad'] + columns[rp:]
+    #print(newC)
     df = df[newC]
     return df
 

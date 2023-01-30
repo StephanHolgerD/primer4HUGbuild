@@ -504,7 +504,9 @@ def main():
             # https://docs.streamlit.io/library/api-reference/data/st.dataframe
             # st.table(df)
             st.text('\n')
-            AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True,fit_columns_on_grid_load=True)
+#            AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True,fit_columns_on_grid_load=True,columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
+            AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True,columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
+
 
             #dff = df.to_html(escape=False)
             #st.write(dff, unsafe_allow_html=True)
