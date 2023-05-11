@@ -12,12 +12,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import streamlit as st
-
+import gc as garcoll
 from primer4.models import Variant
 from primer4.utils import convert_chrom, log
 from primer4.design import project_mask_onto_primers
 tmpD = '/tmp'
-pyGenomeTracksBin = '/usr/local/bin/stream_env/bin/pyGenomeTracks'
+#pyGenomeTracksBin = '/usr/local/bin/stream_env/bin/pyGenomeTracks'
+pyGenomeTracksBin = '/home/drukewitz/miniconda3_new/envs/primer4/bin/pyGenomeTracks'
 def prepare_mock_data_for_vis():
     # Data for plotting
     # https://docs.streamlit.io/library/api-reference/charts/st.pyplot
@@ -248,7 +249,8 @@ def prepare_data_for_vis(v, tmp, primers):
 
     with open(tmp_fp / 'tracks.filled.ini', 'w+') as out:
         out.write(filled)
-
+    del filled
+    garcoll.collect()
     img_fp = str(tmp_fp / 'img.png')
 
     subprocess.run([

@@ -5,6 +5,8 @@ import re
 import subprocess
 import tempfile
 
+import gc
+
 import numpy as np
 import pandas as pd
 import primer3
@@ -104,7 +106,6 @@ def design_primers(masked, constraints, params, previous=[]):
 
         d = project_mask_onto_primers(
             best, constraints['snvs'], params['primers']['mn_3prime_matches'])
-        
         valid_fwd, dots_fwd, pos_fwd = d['fwd']
         valid_rev, dots_rev, pos_rev = d['rev']
         #print(valid_fwd, dots_fwd, pos_fwd, valid_rev, dots_rev, pos_rev)
@@ -115,6 +116,9 @@ def design_primers(masked, constraints, params, previous=[]):
                 ['N' if ix in set(pos_fwd + pos_rev) else i for ix, i in enumerate(masked)])
         else:
             previous.append(best)
+
+        if len(previous)>=100:
+            yield previous
 
         yield from design_primers(masked, constraints, params, previous)
 
@@ -240,7 +244,6 @@ def check_for_multiple_amplicons(primers, fp_genome, params):
     _ = subprocess.run(command, capture_output=True, shell=True)
     # log_blast = ...
     # print(log_blast)
-
     result = Path(p) / 'result'
     df = pd.read_csv(result, sep='\t', names=fields.split(' '))
     df = df.astype({'btop': str})
@@ -392,6 +395,15 @@ def check_for_multiple_amplicons(primers, fp_genome, params):
         else:
             print(f'Primer pair {primer.name} does not pass, likely too unspecific (> {mx_blast_hits} Blast hits)')
     # print(results)
+
+    del df
+    del _ 
+    del primers
+    del unique
+    del cnt
+    del sub
+    gc.collect()
+
     return results, lu
     # lu looks like this:
     #  ... ('9434526f', 'rev', 'NT_113943.1', 41544, 41558): '..........|.|..',

@@ -4,6 +4,7 @@ pytest --config config.json
 '''
 import argparse
 from datetime import date
+import gc
 
 # from collections import Counter
 import json
@@ -93,6 +94,9 @@ def gimme_some_primers(method, code, fp_genome, genome, hdp, db, vardbs, params,
         constraints['snvs'] = tmp.mask
         primers = [p for p in next(
             design_primers(masked, constraints, params, []))]
+        del masked
+        del constraints
+        gc.collect()
         print(log(f'Found {len(primers)} primers'))
         #print(constraints)
         
@@ -238,6 +242,10 @@ def gimme_some_primers(method, code, fp_genome, genome, hdp, db, vardbs, params,
     print(log(msg))
     st.write(msg)
     # Results are sorted so we can just return the top mx elements.
+    
+    del primers
+    del primers_copy
+    gc.collect()
     return all_results[:mx], tmp, all_aln[:mx]
 
 @st.cache
@@ -290,6 +298,8 @@ def housekeeping(params):
 
 
 def main():
+    gc.collect()
+
     if 'primers' not in st.session_state:
         st.session_state['primers'] = ''
     if 'tmp' not in st.session_state:
@@ -324,12 +334,10 @@ def main():
         # internet connection is needed.
         print(log('Will use API to obtain sequence data'))
 
-    genome, hdp, vardbs = housekeeping(params)
 
     # Why is load annotation data here, not in housekeeping fn?
     # Cannot be opened by housekeeping bc/ second iteration will cause:
     # sqlite3.ProgrammingError: SQLite objects created in a thread can only be used in that same thread. The object was created in thread id 123145481936896 and this is thread id 123145532841984.
-    db = gffutils.FeatureDB(params['data']['annotation'], keep_order=True)
 
 
     wlcmStr = f'''
@@ -380,12 +388,17 @@ def main():
         with col3:
             amplicon_len_max = st.number_input('max length [bp]', value=600)
         with col4:
-            max_variation = st.number_input('Allele frequency [%]', min_value=0., max_value=100., value=0., step=0.01, format='%.2f') / 100
+            max_variation = st.number_input('max. allowed allele frequency [%]', min_value=0., max_value=100., value=0., step=0.01, format='%.2f') / 100
+            #print(max_variation)
+            #max_variation = float(st.number_input('Allele frequency [%]', min_value=0., max_value=100., value=0., step=0.01, format='%.2f') / 100)
+            #print(max_variation)
+
         
         # Row 2
         # https://discuss.streamlit.io/t/how-to-have-2-rows-of-columns-using-st-beta-columns/11699/2
         with col1:
-            blind_search = st.checkbox('Allow SNVs', value=True)
+            #blind_search = st.checkbox('Allow SNVs', value=True)
+            blind_search = False
 
         # Every form must have a submit button.
         submitted = st.form_submit_button(
@@ -405,10 +418,14 @@ def main():
                 tx = code[0].split(':')[0]  # case : NM_005585.4:c.1419dup
                 
                 print(log('Sync transcript'))
+                db = gffutils.FeatureDB(params['data']['annotation'], keep_order=True)
+
                 used_tx = sync_tx_with_feature_db(tx, db)
                 if used_tx != tx:
                     st.warning(f'Used trancript {used_tx}')
                     code = [code[0].replace(tx, used_tx)] + code[1:]
+                
+                genome, hdp, vardbs = housekeeping(params)
 
                 print(log('Primer design'))
 
@@ -424,12 +441,20 @@ def main():
                         params,
                         max_variation,
                         blind_search)
+                del genome
+                del hdp
+                del vardbs
                 st.session_state['primers']=primers
                 st.session_state['tmp']=tmp
+                gc.collect()
                 #st.session_state['params']=params
                 #st.session_state['order']=order
                 if len(primers) > 0:
                     st.session_state['image'] = prepare_data_for_vis(tmp.data, tmp, primers)
+                del tmp
+                gc.collect()
+
+                
 
         
     primers = st.session_state['primers']
@@ -540,7 +565,7 @@ def main():
             #writer.save()
             #workbook = writer.book
             #worksheet = writer.sheets['Sheet1']
-                writer.save()
+                writer.close()
             
             #workbook = writer.book
             #worksheet = writer.sheets['Sheet1']
@@ -574,9 +599,16 @@ def main():
                                 data=excel ,
                                 file_name= f'primer_{d}.xlsx')
 
+    #del primers 
+    #del tmp 
+    #del image 
+        gc.collect()
+
+    gc.collect()
     return None
+
 
 
 if __name__ == '__main__':
     main()
-
+    gc.collect()

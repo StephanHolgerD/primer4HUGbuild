@@ -636,6 +636,8 @@ def load_variation_freqs(feat, databases, params):
     
 
     before = len(freqs)
+    #print({k: v for k, v in freqs.items() if len(v) >= params['snv_filter']['min_databases']})
+    #print(params['snv_filter']['min_databases'])
     filt = {k: v for k, v in freqs.items() if len(v) >= params['snv_filter']['min_databases']}
     after = len(filt)
     print(log(f'Include {after} SNVs, {skip} SNVs too large, removed {before-after} singletons'))
