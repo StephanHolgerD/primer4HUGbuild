@@ -491,7 +491,8 @@ def main():
         # image = Image.open(fp)
 
             df = InserInSilPCRlink(df,MaxL=amplicon_len_max)
-            gb = GridOptionsBuilder.from_dataframe(df,min_column_width=100)
+            main_table_col_menu = {"menuTabs" : [],} # any combination of 'filterMenuTab', 'generalMenuTab', 'columnsMenuTab'}
+            gb = GridOptionsBuilder.from_dataframe(df,min_column_width=1,filterable=False)
             gb.configure_column("UCSC PCR",
                     headerName="UCSC PCR",
                     cellRenderer=JsCode("""function(params) {return `<a href=${params.value} target="_blank">UCSC pcr</a>`}"""))
@@ -507,7 +508,7 @@ def main():
             gb.configure_column("reverse primer gnomad",
                     headerName="reverse primer gnomad",
                     cellRenderer=JsCode("""function(params) {return `<a href=${params.value} target="_blank">gnomAD rev</a>`}"""))
-   
+            gb.configure_default_column(editable=False,groupable=True,cellStyle={'text-align': 'center'},**main_table_col_menu)
             gridOptions = gb.build()
 
     
@@ -529,8 +530,9 @@ def main():
             # https://docs.streamlit.io/library/api-reference/data/st.dataframe
             # st.table(df)
             st.text('\n')
+            custom_css = {".ag-header-cell-label": {"justify-content": "center"},".ag-header-group-cell-label": {"justify-content": "center"}}
 #            AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True,fit_columns_on_grid_load=True,columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
-            AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True,columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS)
+            AgGrid(df, gridOptions=gridOptions, allow_unsafe_jscode=True,columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,custom_css=custom_css)
 
 
             #dff = df.to_html(escape=False)
