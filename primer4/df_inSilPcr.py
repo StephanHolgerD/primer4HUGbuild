@@ -46,7 +46,9 @@ def InserInSilPCRlink(df,MaxL=600,genome='hg38'):
     df['gnomAD region'] = linksGnomadRegion
     df['forward primer gnomad'] = linksGnomadfwd
     df['reverse primer gnomad'] = linksGnomadrev
-    df['Nr. Abb'] = list(range(len(df)))
+    df['fwd Tm'] = [str(round(x,1)) for x in df['fwd Tm'] ] 
+    df['rev Tm'] = [str(round(x,1)) for x in df['rev Tm'] ] 
+    df['Nr. Abb'] = list(range(1,len(df)+1))
     fp = [n for n,x in enumerate(columns) if x =='fwd start'][0]
     rp = [n for n,x in enumerate(columns) if x =='rev start'][0]
 
