@@ -94,7 +94,10 @@ def prepare_data_for_vis(v, tmp, primers):
     '''
     Main fn to prepare, well, data for vis ...
     '''
-    max_primer_pairs_display = 3
+    max_primer_pairs_display = 5
+
+    if len(primers)<max_primer_pairs_display:
+        max_primer_pairs_display=len(primers)
     is_variant = type(v) == Variant
 
     # --- Primers and query variant ---
@@ -116,12 +119,13 @@ def prepare_data_for_vis(v, tmp, primers):
             out.write(line)
             # print(line)
 
-    result = ''
+    result = []
     positions = []
-    cnt = 0
+    cnt = 1
     for pair in islice(primers, max_primer_pairs_display):
         # name = uuid4().__str__() + f'::{x}'
         name = cnt
+        rr=''
         for x in ['fwd', 'rev']:
 
             chrom = tmp.feat.chrom
@@ -138,12 +142,20 @@ def prepare_data_for_vis(v, tmp, primers):
             # score = colors[cnt]
             # score = cnt
             score = pair.penalty
-            result += f'{chrom}\t{start}\t{end}\t{name}\t{score}\t{"+" if x == "fwd" else "-" }\n'
+            rr += f'{chrom}\t{start}\t{end}\t{name}\t{score}\t{"+" if x == "fwd" else "-" }\n'
             # print(result)
+        result.append(rr)
         cnt += 1
 
-    with open(tmp_fp / 'primers.bed', 'w+') as out:
-        out.write(result)
+    primer_result = result
+    c=0
+    xx=1
+    for n,p in enumerate(result):
+        n=n+1
+        out = open(tmp_fp / f'primers{n}.bed', 'w+')
+        out.write(p+'\n')
+        out.close()
+    
 
     # --- Exons ---
     # bed format
@@ -223,19 +235,33 @@ def prepare_data_for_vis(v, tmp, primers):
 
     gene_name = tmp.feat.attributes.get('gene')[0]
 
+#    content_tracks_spec = {
+#        'query_fp': str(tmp_fp / 'query.bed'),
+#        'variants_fp': str(tmp_fp / 'variants.bedgraph'),
+#        'filtered_fp': str(tmp_fp / 'filtered.bedgraph'),
+#        'gc_fp': str(tmp_fp / 'gc.bedgraph'),
+#        'mask_fp': str(tmp_fp / 'mask.bedgraph'),
+#        'primers_fp': str(tmp_fp / 'primers.bed'),
+#        'exons_fp': str(tmp_fp / 'exons.bed'),
+#        'gene_name': gene_name,
+#    }
     content_tracks_spec = {
         'query_fp': str(tmp_fp / 'query.bed'),
         'variants_fp': str(tmp_fp / 'variants.bedgraph'),
         'filtered_fp': str(tmp_fp / 'filtered.bedgraph'),
         'gc_fp': str(tmp_fp / 'gc.bedgraph'),
         'mask_fp': str(tmp_fp / 'mask.bedgraph'),
-        'primers_fp': str(tmp_fp / 'primers.bed'),
         'exons_fp': str(tmp_fp / 'exons.bed'),
         'gene_name': gene_name,
     }
+    c=0
+    xx=1
+    for n,p in enumerate(primer_result):
+        n=n+1
+        content_tracks_spec[f'primers_fp{n}']=str(tmp_fp / f'primers{n}.bed')
 
     
-    with open('tracks.empty.ini', 'r') as file:
+    with open(f'tracks_p{len(primer_result)}.empty.ini', 'r') as file:
         s = file.read()
 
     empty = Template(s)
@@ -247,20 +273,22 @@ def prepare_data_for_vis(v, tmp, primers):
 
     filled = empty.render(**content_tracks_spec, comment=comment)
 
+
+
     with open(tmp_fp / 'tracks.filled.ini', 'w+') as out:
         out.write(filled)
     del filled
     garcoll.collect()
     img_fp = str(tmp_fp / 'img.png')
 
-    subprocess.run([
+    _ = subprocess.run([
         pyGenomeTracksBin,
         '--tracks', str(tmp_fp / 'tracks.filled.ini'),
         '--region', f'{tmp.feat.chrom}:{np.min(positions)-100}-{np.max(positions)+100}',
         '--outFileName', img_fp,
-        '--dpi', '300',
-        ],
-        stderr=subprocess.DEVNULL)
+        '--dpi', '300'
+        ],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    #print(log(_.stderr))
 
     try:
         image = Image.open(img_fp)
