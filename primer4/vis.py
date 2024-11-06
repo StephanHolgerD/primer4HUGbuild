@@ -17,8 +17,8 @@ from primer4.models import Variant
 from primer4.utils import convert_chrom, log
 from primer4.design import project_mask_onto_primers
 tmpD = '/tmp'
-#pyGenomeTracksBin = '/usr/local/bin/stream_env/bin/pyGenomeTracks'
-pyGenomeTracksBin = '/home/drukewitz/miniconda3_new/envs/primer4/bin/pyGenomeTracks'
+pyGenomeTracksBin = '/usr/local/bin/stream_env/bin/pyGenomeTracks'
+#pyGenomeTracksBin = '/home/drukewitz/miniconda3_new/envs/primer4/bin/pyGenomeTracks'
 def prepare_mock_data_for_vis():
     # Data for plotting
     # https://docs.streamlit.io/library/api-reference/charts/st.pyplot

@@ -1,16 +1,14 @@
 params = {
-    "version": "hg19",
+    "version": "hg38",
     "data": {
-        "reference": "/mnt/data/GRCh37_latest_genomic.fna",
-        "annotation": "/mnt/data/hg19-p13_annotation.db",
+        "reference": "/mnt/data/HG38/GRCh38_latest_genomic.fna",
+        "annotation": "/mnt/data/HG38/hg38-p14_annotation.db",
         "coordinates": "/mnt/data/cdot-0.2.1.refseq.grch37_grch38.json.gz",
         "sequences": "/mnt/data/seqrepo/2021-01-29",
         "variation": {
-            "dbSNP": "/mnt/data/GRCh37_latest_dbSNP_all.vcf.gz",
-            "1000Genomes": "/mnt/data/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5b.20130502.sites.vcf.gz",
-            "ESP": "/mnt/data/ESP6500SI-V2-SSA137.GRCh38-liftover.snps_indels.vcf.gz"
+            "dbSNP": "/mnt/data/HG38/GRCh38_latest_dbSNP_all.vcf.gz"
         },
-        "chrom_names": "/mnt/data/chrom_names_hg19.csv"
+        "chrom_names": "/mnt/data/HG38/chrom_names_hg38.csv"
     },
     "snv_filter": {
         "min_databases": 2,
@@ -24,10 +22,10 @@ params = {
     },
     "blast": {
         "word_size": 13,
-        "mx_evalue": 100,
+        "mx_evalue": 5,
         "n_cpus": 8,
         "mx_blast_hits": 10000,
-        "index": "data/redux.fna"
+        "index": "/mnt/data/redux.fna"
     },
     "n_return": 10,
     "burnin_sanger": 30,

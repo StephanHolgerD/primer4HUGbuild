@@ -22,7 +22,7 @@ def design_primers(masked, constraints, params, previous=[]):
     # https://primer3.org/manual.html#SEQUENCE_EXCLUDED_REGION
     
     # 'SEQUENCE_INCLUDED_REGION'
-    
+
     # 'PRIMER_PRODUCT_SIZE_RANGE'
     # https://github.com/libnano/primer3-py/issues/18
 

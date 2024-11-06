@@ -96,7 +96,7 @@ def gimme_some_primers(method, code, fp_genome, genome, hdp, db, vardbs, params,
             design_primers(masked, constraints, params, []))]
         del masked
         del constraints
-        gc.collect()
+        #gc.collect()
         print(log(f'Found {len(primers)} primers'))
         #print(constraints)
         
@@ -245,7 +245,7 @@ def gimme_some_primers(method, code, fp_genome, genome, hdp, db, vardbs, params,
     
     del primers
     del primers_copy
-    gc.collect()
+    #gc.collect()
     return all_results[:mx], tmp, all_aln[:mx]
 
 @st.cache
@@ -298,7 +298,7 @@ def housekeeping(params):
 
 
 def main():
-    gc.collect()
+    #gc.collect()
 
     if 'primers' not in st.session_state:
         st.session_state['primers'] = ''
@@ -446,13 +446,13 @@ def main():
                 del vardbs
                 st.session_state['primers']=primers
                 st.session_state['tmp']=tmp
-                gc.collect()
+                #gc.collect()
                 #st.session_state['params']=params
                 #st.session_state['order']=order
                 if len(primers) > 0:
                     st.session_state['image'] = prepare_data_for_vis(tmp.data, tmp, primers)
                 del tmp
-                gc.collect()
+                #gc.collect()
 
                 
 
@@ -604,13 +604,13 @@ def main():
     #del primers 
     #del tmp 
     #del image 
-        gc.collect()
+        #gc.collect()
 
-    gc.collect()
+   # gc.collect()
     return None
 
 
 
 if __name__ == '__main__':
     main()
-    gc.collect()
+    #gc.collect()
